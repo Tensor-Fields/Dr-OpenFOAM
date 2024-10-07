@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-    //simpleControl simple(mesh);
+    simpleControl simple(mesh);
 
     Info<< "\nStarting time loop\n" << endl;
 
@@ -105,23 +105,21 @@ int main(int argc, char *argv[])
 		fvScalarMatrix& uEqn = tuEqn.ref();
 
         uEqn.relax();
-        uEqn.solve();
+        //uEqn.solve();
+        solve(uEqn);
         //u.correctBoundaryConditions();
 
-        // Update U vector field from the new x-component u
-	
-		/*
-        U = vector(1, 0, 0) * u + vector(0, 1, 0) * v;
 
         // Correct boundary conditions for U
-        U.correctBoundaryConditions();
+        //U.correctBoundaryConditions();
+		
 
         
         // Correct the velocity flux (phi)
         //surfaceScalarField phi = fvc::flux(U);  // Define phi
 
 
-		*/
+		
 
         phi = fvc::flux(U);  // Recalculate phi from U
 		
@@ -130,7 +128,7 @@ int main(int argc, char *argv[])
         //fvScalarMatrix PhiEqn(fvm::laplacian(Phi));
 
 		
-        fvScalarMatrix PhiEqn
+        tmp<fvScalarMatrix> tPhiEqn
         (
             fvm::laplacian(dimensionedScalar("1", dimless, 1), Phi)
          ==
@@ -149,8 +147,9 @@ int main(int argc, char *argv[])
         );
 		*/
 
+		fvScalarMatrix& PhiEqn = tPhiEqn.ref();
         //PhiEqn.setReference(PhiRefCell, PhiRefValue);
-        //PhiEqn.relax();
+        PhiEqn.relax();
         PhiEqn.solve();
         //Phi.correctBoundaryConditions();
 
@@ -162,6 +161,10 @@ int main(int argc, char *argv[])
         volVectorField UIntermediate(fvc::reconstruct(phi));
         v = UIntermediate.component(vector::Y);
         v.correctBoundaryConditions();  // Correct the boundary conditions for v
+        // Update U vector field from the new x-component u
+	
+	
+        U = vector(1, 0, 0) * u + vector(0, 1, 0) * v;
 		/*
 
         // Solve the temperature equation
@@ -177,15 +180,18 @@ int main(int argc, char *argv[])
 		*/
         tmp<fvScalarMatrix> tTEqn
         ( 
-        fvm::div(phi, T)
-        == 
-        fvm::laplacian(nu / Pr, T)
+            fvm::div(phi, T)
+            == 
+            fvm::laplacian(nu / Pr, T)
         ); 
+
         fvScalarMatrix& TEqn = tTEqn.ref();
 
         TEqn.relax();
 
         solve(TEqn);
+
+		T.correctBoundaryConditions();
 		
         
 
