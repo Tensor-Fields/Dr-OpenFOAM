@@ -99,7 +99,9 @@ int main(int argc, char *argv[])
         // Solve the x-momentum equation for u
         tmp<fvScalarMatrix> tuEqn
         (
-            fvm::div(phi, u) == fvm::laplacian(nu, u) // or fvm::ddt(u) for transient problems
+            fvm::div(phi, u) 
+		 == 
+		    fvm::laplacian(nu, u) // or fvm::ddt(u) for transient problems
         );
 
 		fvScalarMatrix& uEqn = tuEqn.ref();
@@ -128,7 +130,7 @@ int main(int argc, char *argv[])
         //fvScalarMatrix PhiEqn(fvm::laplacian(Phi));
 
 		
-        tmp<fvScalarMatrix> tPhiEqn
+        fvScalarMatrix PhiEqn
         (
             fvm::laplacian(dimensionedScalar("1", dimless, 1), Phi)
          ==
@@ -147,9 +149,9 @@ int main(int argc, char *argv[])
         );
 		*/
 
-		fvScalarMatrix& PhiEqn = tPhiEqn.ref();
+		//fvScalarMatrix& PhiEqn = tPhiEqn.ref();
         //PhiEqn.setReference(PhiRefCell, PhiRefValue);
-        PhiEqn.relax();
+        //PhiEqn.relax();
         PhiEqn.solve();
         //Phi.correctBoundaryConditions();
 
@@ -164,7 +166,7 @@ int main(int argc, char *argv[])
         // Update U vector field from the new x-component u
 	
 	
-        U = vector(1, 0, 0) * u + vector(0, 1, 0) * v;
+        U = volVectorField(vector(1, 0, 0) * u + vector(0, 1, 0) * v);
 		/*
 
         // Solve the temperature equation
