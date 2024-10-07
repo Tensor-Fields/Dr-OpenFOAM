@@ -74,12 +74,12 @@ int main(int argc, char *argv[])
     #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
-    #include "createFields.H"
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
     simpleControl simple(mesh);
+    #include "createFields.H"
 
     Info<< "\nStarting time loop\n" << endl;
 

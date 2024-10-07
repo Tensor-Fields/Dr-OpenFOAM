@@ -188,7 +188,6 @@ mesh.setFluxRequired(Phi.name());
 
 */
 
-#include "fvCFD.H"
 
 Info << "Creating fields\n" << endl;
 
@@ -207,7 +206,8 @@ volScalarField u
 );
 
 // Read the y-velocity field `v`, initialized to zero
-volScalarField v
+volScalarField v(u);
+/*
 (
     IOobject
     (
@@ -220,6 +220,7 @@ volScalarField v
     mesh,
     dimensionedScalar("v", dimensionSet(0, 1, -1, 0, 0), 0.0)  // Initialize with zero
 );
+*/
 
 // Create the velocity vector field `U` from `u` and `v`
 volVectorField U
@@ -232,11 +233,13 @@ volVectorField U
         IOobject::NO_READ,     // Do not read from a file, calculated from `u` and `v`
         IOobject::AUTO_WRITE   // Write during the simulation
     ),
-    mesh,
-    dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector(0, 0, 0))  // Initialize U as a velocity field (m/s)
+    //mesh,
+    //dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector(0, 0, 0))  // Initialize U as a velocity field (m/s)
+	vector(1,0,0)*u + vector(0,1,0)*v
 );
 
 // Set up the flux field `phi` based on the velocity field `U`
+/*
 surfaceScalarField phi
 (
     IOobject
@@ -249,6 +252,7 @@ surfaceScalarField phi
     ),
     fvc::flux(U)  // Initialize phi as the flux of the velocity field `U`
 );
+*/
 
 // Read or construct the temperature field `T`
 volScalarField T
@@ -354,6 +358,7 @@ mesh.setFluxRequired(Phi.name());
 const word pName = args.getOrDefault<word>("pName", "p");
 
 // Infer the pressure BCs from the velocity
+/*
 wordList pBCTypes
 (
     U.boundaryField().size(),
@@ -369,6 +374,7 @@ forAll(U.boundaryField(), patchi)
 }
 
 Info<< "Constructing pressure field " << pName << nl << endl;
+
 volScalarField p
 (
     IOobject
@@ -383,20 +389,21 @@ volScalarField p
     dimensionedScalar(sqr(dimVelocity), Zero),
     pBCTypes
 );
+*/
 
 
 // Infer the velocity potential BCs from the pressure
 wordList PhiBCTypes
 (
-    p.boundaryField().size(),
-    zeroGradientFvPatchScalarField::typeName
+    u.boundaryField().size(),
+    fixedValueFvPatchScalarField::typeName
 );
 
-forAll(p.boundaryField(), patchi)
+forAll(u.boundaryField(), patchi)
 {
-    if (p.boundaryField()[patchi].fixesValue())
+    if (u.boundaryField()[patchi].fixesValue())
     {
-        PhiBCTypes[patchi] = fixedValueFvPatchScalarField::typeName;
+        PhiBCTypes[patchi] = zeroGradientFvPatchScalarField::typeName;
     }
 }
 
@@ -420,9 +427,18 @@ volScalarField Phi
     PhiBCTypes
 );
 
+#include "createPhi.H"
+
 label PhiRefCell = 0;
 scalar PhiRefValue = 0;
 
+setRefCell
+(
+    Phi,
+    simple.dict(),
+    PhiRefCell,
+    PhiRefValue
+);
 
 // Ensure that the mesh requires the flux for Phi
 mesh.setFluxRequired(Phi.name());
